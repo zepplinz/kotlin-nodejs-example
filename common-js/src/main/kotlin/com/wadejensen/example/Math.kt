@@ -1,12 +1,13 @@
-package com.wadejensen.example
-
-// The `actual` keyword declares this is the implementation `expect`ed by the common platform module
-// which satisfies the interface IConsole for the js platform target
-// (see `com.wadejensen.example.Console` in `common`).
-// https://kotlinlang.org/docs/reference/multiplatform.html#platform-specific-declarations
-actual class Math : IMath {
-    // Dynamically `eval`uate JS code within Kotlin to get the JS Math singleton object
-    private val mathJs: dynamic = js("Math")
-    // Call to JS on dynamic object
-    actual override fun sqrt(x: Double): Double = mathJs.sqrt(x)
+// Define the IMath interface
+interface IMath {
+    sqrt(x: number): number;
+}
+// Implement the Math class
+class Math implements IMath {
+    // Access the JavaScript Math object
+    private mathJs: any = Math;
+    // Implement the sqrt function
+    sqrt(x: number): number {
+        return this.mathJs.sqrt(x);
+    }
 }
