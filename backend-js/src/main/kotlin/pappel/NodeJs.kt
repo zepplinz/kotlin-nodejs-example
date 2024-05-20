@@ -1,3 +1,3 @@
-package pappel
+// package pappel
 
-external fun require(module: String): dynamic
+declare function require(module: string): any;
