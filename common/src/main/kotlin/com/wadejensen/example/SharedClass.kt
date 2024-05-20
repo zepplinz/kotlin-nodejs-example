@@ -1,66 +1,51 @@
-package com.wadejensen.example
-
-/**
- * Shared multiplatform code written in Kotlin
- * @param console you need to pass some IConsole for printing things.
- */
-class SharedClass(val console: IConsole, val math: IMath) {
-
-    var platform: String = ""
-
-    fun printMe() {
-        console.println("Hello Kotlin!\n\nThis is a shared code between multiple runtimes. Current platform: [$platform]:")
+interface IConsole {
+    println(message: string): void;
+}
+interface IMath {
+    sqrt(value: number): number;
+}
+class SharedClass {
+    private console: IConsole;
+    private math: IMath;
+    private platform: string = "";
+    constructor(console: IConsole, math: IMath) {
+        this.console = console;
+        this.math = math;
     }
-
-    /**
-     * Prints first n prime numbers to console.
-     * @param n number of primes
-     */
-    fun printPrimes(n: Long) {
-        for (i in calcPrimes(n)) console.println("$i")
+    printMe(): void {
+        this.console.println(`Hello Kotlin!\n\nThis is a shared code between multiple runtimes. Current platform: [${this.platform}]:`);
     }
-
-    fun givePrimes(n: Long): List<Long>{
-        return calcPrimes(n)
+    printPrimes(n: number): void {
+        this.calcPrimes(n).forEach(prime => this.console.println(prime.toString()));
     }
-
-    /**
-     * Calculates first n prime numbers
-     * @see <a href="http://www.paul-scott.com/nth-prime.php">Source code inspired by this PHP version</a>
-     * @param n number of primes
-     */
-    fun calcPrimes(n: Long): List<Long> {
-
-        val primes = arrayListOf<Long>()
-        if (n > 0) primes.add(2)
-
-        var c = 1
-        var p = 3.0
-
-        var prime: Boolean
-
+    givePrimes(n: number): number[] {
+        return this.calcPrimes(n);
+    }
+    private calcPrimes(n: number): number[] {
+        const primes: number[] = [];
+        if (n > 0) primes.push(2);
+        let c = 1;
+        let p = 3;
         while (n > 1) {
-            // Check if p is prime
-            prime = true
-            val sqrt = math.sqrt(p)
-            (1..c).filter { primes[it - 1] < sqrt }.forEach {
-                if ((p.toLong() % primes[it]) == 0L) {
-                    prime = false
-                    return@forEach
+            let prime = true;
+            const sqrt = this.math.sqrt(p);
+            for (let i = 1; i <= c; i++) {
+                if (primes[i - 1] < sqrt) {
+                    if (p % primes[i] === 0) {
+                        prime = false;
+                        break;
+                    }
                 }
             }
-            // Record p if prime
             if (prime) {
-                primes.add(p.toLong())
-                c++
-                if (c.toLong() == n) {
-                    break
+                primes.push(p);
+                c++;
+                if (c === n) {
+                    break;
                 }
             }
-
-            // Next p to check
-            p += 2
+            p += 2;
         }
-        return primes.toList()
+        return primes;
     }
 }
