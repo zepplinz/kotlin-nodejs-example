@@ -3,123 +3,87 @@
  * https://github.com/blazer82/pappel-framework
  */
 
-package pappel.http
+import { JSONUtils } from './JSONUtils';
 
-import pappel.JSONUtils
+enum Status {
+    OK = 200,
+    CREATED = 201,
+    ACCEPTED = 202,
+    NO_CONTENT = 204,
+    BAD_REQUEST = 400,
+    UNAUTHORIZED = 401,
+    FORBIDDEN = 403,
+    NOT_FOUND = 404,
+    INTERNAL_SERVER_ERROR = 500,
+    NOT_IMPLEMENTED = 501,
+    BAD_GATEWAY = 502,
+    SERVICE_UNAVAILABLE = 503,
+    GATEWAY_TIMEOUT = 504
+}
 
-/**
- * HTTP Response class.
- *
- * Encapsulates HTTP responses as used within [Router] callbacks.
- * @constructor Creates a new Response based on an expressjs response.
- */
-class Response(external private val res: dynamic) {
+interface Response {
+    end(): void;
+    render(view: string, callback?: (html: string | null) => void): void;
+    render(view: string, parameters: Record<string, any>, callback?: (html: string | null) => void): void;
+    send(string: string): void;
+    json(data: any): void;
+    type(type: string): void;
+    append(field: string, value: string): void;
+    status(code: number): void;
+}
 
-    /**
-     * Ends response.
-     * May be called instead of [send] or [sendJSON].
-     */
-    fun end() {
-        res.end()
+class Response {
+    private res: Response;
+
+    constructor(res: Response) {
+        this.res = res;
     }
 
-    /**
-     * Renders [view] and sends it to the client.
-     * @param view Relative path to view
-     */
-    fun render(view: String) {
-        res.render("$view.html")
+    end() {
+        this.res.end();
     }
 
-    /**
-     * Renders [view] and sends it to [callback].
-     * @param view Relative path to view
-     * @param callback Callback to process rendered view in
-     */
-    fun render(view: String, callback: (String?) -> Unit) {
-        res.render("$view.html") {
-            _, html -> callback.invoke(html as? String)
+    render(view: string): void;
+    render(view: string, callback: (html: string | null) => void): void;
+    render(view: string, parameters: Record<string, any>): void;
+    render(view: string, parameters: Record<string, any>, callback: (html: string | null) => void): void;
+    render(view: string, parametersOrCallback?: Record<string, any> | ((html: string | null) => void), callback?: (html: string | null) => void) {
+        if (typeof parametersOrCallback === 'function') {
+            this.res.render(`${view}.html`, parametersOrCallback);
+        } else if (parametersOrCallback && typeof parametersOrCallback === 'object') {
+            if (callback) {
+                this.res.render(`${view}.html`, JSONUtils.toJSON(parametersOrCallback), callback);
+            } else {
+                this.res.render(`${view}.html`, JSONUtils.toJSON(parametersOrCallback));
+            }
+        } else {
+            this.res.render(`${view}.html`);
         }
     }
 
-    /**
-     * Renders [view] using [parameters] and sends it to the client.
-     * @param view Relative path to view
-     * @param parameters Parameters to pass through to view template
-     */
-    fun render(view: String, parameters: Map<String, Any>) {
-        res.render("$view.html", JSONUtils.toJSON(parameters))
+    send(string: string) {
+        this.res.send(string);
     }
 
-    /**
-     * Renders [view] using [parameters] and sends it to [callback].
-     * @param view Relative path to view
-     * @param parameters Parameters to pass through to view template
-     * @param callback Callback to process rendered view in
-     */
-    fun render(view: String, parameters: Map<String, Any>, callback: (String?) -> Unit) {
-        res.render("$view.html", JSONUtils.toJSON(parameters)) {
-            _, html -> callback.invoke(html as? String)
-        }
+    sendJSON(data: Record<string, any> | any[]) {
+        this.res.json(JSONUtils.toJSON(data));
     }
 
-    /**
-     * Sends response [string].
-     * @param string String to send to the client
-     */
-    fun send(string: String) {
-        res.send(string)
+    setContentType(type: string) {
+        this.res.type(type);
     }
 
-    /**
-     * Sends [data] response as JSON.
-     * @param data Map to send to the client as JSON
-     */
-    fun sendJSON(data: Map<String, Any?>) {
-        res.json(JSONUtils.toJSON(data))
+    setHeader(field: string, value: string) {
+        this.res.append(field, value);
     }
 
-    /**
-     * Sends [data] response as JSON.
-     * @param data Iterable to send to the client as JSON
-     */
-    fun sendJSON(data: Iterable<Any?>) {
-        res.json(JSONUtils.toJSON(data))
+    setHeaders(fields: Record<string, string>) {
+        Object.entries(fields).forEach(([key, value]) => {
+            this.res.append(key, value);
+        });
     }
 
-    /**
-     * Sets content [type] HTTP header.
-     * @param type Content type string
-     */
-    fun setContentType(type: String) {
-        res.type(type)
+    setStatus(status: Status) {
+        this.res.status(status);
     }
-
-    /**
-     * Sets HTTP header [field] to [value].
-     * @param field Header field name
-     * @param value Header field value
-     */
-    fun setHeader(field: String, value: String) {
-        res.append(field, value)
-    }
-
-    /**
-     * Sets multiple HTTP headers.
-     * @param fields Header field names and values
-     */
-    fun setHeaders(fields: Map<String, String>) {
-        fields.forEach {
-            entry -> res.append(entry.key, entry.value)
-        }
-    }
-
-    /**
-     * Sets HTTP [status]
-     * @param status [Status]
-     */
-    fun setStatus(status: Status) {
-        res.status(status.code)
-    }
-
 }
