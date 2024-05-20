@@ -1,9 +1,8 @@
-package com.wadejensen.example
-
+// Define the IConsole interface
 interface IConsole {
     /**
      * Prints text to console.
      * @param s text to print
      */
-    fun println(s: String)
+    println(s: string): void;
 }
