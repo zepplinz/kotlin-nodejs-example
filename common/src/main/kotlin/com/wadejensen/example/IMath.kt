@@ -1,9 +1,8 @@
-package com.wadejensen.example
-
+// Define the IMath interface in TypeScript
 interface IMath {
     /**
      * Calculates square root of x.
      * @param x argument
      */
-    fun sqrt(x: Double): Double
+    sqrt(x: number): number;
 }
