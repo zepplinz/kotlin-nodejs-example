@@ -1,3 +1,13 @@
-package com.wadejensen.example.model
-
-data class Person(val name: String, val age: Int, val address: Address)
+// Define the Address type
+interface Address {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+}
+// Define the Person type
+interface Person {
+    name: string;
+    age: number;
+    address: Address;
+}
