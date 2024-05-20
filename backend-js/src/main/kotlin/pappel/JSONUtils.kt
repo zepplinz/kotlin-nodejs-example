@@ -1,90 +1,72 @@
-/**
- * Adapted from Raphael Stäbler's Pappel Node.js framework for Kotlin
- * https://github.com/blazer82/pappel-framework
- */
+// JSON utilities for easier conversion of types between JavaScript and TypeScript.
+//
+// Most of the time these functions will be directly incorporated into the framework
+// methods and won't be used in any application code.
 
-package pappel
+type Json = { [key: string]: any };
 
-import kotlin.js.Json
-import kotlin.js.json
-
-/**
- * JSON utilities for easier conversion of types between JavaScript and Kotlin.
- *
- * Most of the time these functions will be directly incorporated into the framework
- * methods and won't be used in any application code.
- */
 class JSONUtils {
 
-    companion object {
-
-        /**
-         * Converts a map of [data] into JSON.
-         * @return Json
-         */
-        fun toJSON(data: Map<String, Any?>): Json {
-            val arrayOfPairs: Array<Pair<String, Any?>> = data.map {
-                entry ->
-                when {
-                    entry.value is Map<*, *> -> {
-                        Pair(entry.key, toJSON(entry.value as Map<String, Any?>))
-                    }
-                    entry.value is Iterable<*> -> {
-                        Pair(entry.key, toJSON(entry.value as Iterable<Any?>))
-                    }
-                    else -> {
-                        entry.toPair()
-                    }
-                }
-            }.toTypedArray()
-
-            return json(*arrayOfPairs)
-        }
-
-        /**
-         * Converts any iterable [data] into JSON.
-         * @return Json
-         */
-        fun toJSON(data: Iterable<Any?>): Array<Any?> {
-            val array: Array<Any?> = data.map {
-                entry ->
-                if (entry is Map<*,*>) {
-                    toJSON(entry as Map<String, Any?>)
-                }
-                else {
-                    entry
-                }
-            }.toTypedArray()
-
-            return array
-        }
-
-        /**
-         * Converts any JSON input data to a map.
-         * @return Map<String, Any?>
-         */
-        fun retrieveMap(json: Any): Map<String, Any?>? {
-            if (jsTypeOf(json) != "object") {
-                return null
-            }
-
-            val map: MutableMap<String, Any?> = mutableMapOf()
-
-            val keys = js("Object.keys(json)") as Array<String>
-
-            for (key in keys) {
-                when {
-                    js("typeof json[key]") == "object" -> {
-                        map.put(key, retrieveMap(js("json[key]") as Any))
-                    }
-                    else -> {
-                        map.put(key, js("json[key]") as String)
-                    }
+    /**
+     * Converts a map of [data] into JSON.
+     * @return Json
+     */
+    static toJSON(data: Map<string, any>): Json {
+        const arrayOfPairs: [string, any][] = Array.from(data).map(
+            ([key, value]) => {
+                if (value instanceof Map) {
+                    return [key, JSONUtils.toJSON(value as Map<string, any>)];
+                } else if (Array.isArray(value)) {
+                    return [key, JSONUtils.toJSON(value as any[])];
+                } else {
+                    return [key, value];
                 }
             }
+        );
 
-            return map
+        return Object.fromEntries(arrayOfPairs);
+    }
+
+    /**
+     * Converts any iterable [data] into JSON.
+     * @return Json
+     */
+    static toJSON(data: Iterable<any>): any[] {
+        const array: any[] = Array.from(data).map(
+            (entry) => {
+                if (entry instanceof Map) {
+                    return JSONUtils.toJSON(entry as Map<string, any>);
+                } else {
+                    return entry;
+                }
+            }
+        );
+
+        return array;
+    }
+
+    /**
+     * Converts any JSON input data to a map.
+     * @return Map<string, any>
+     */
+    static retrieveMap(json: any): Map<string, any> | null {
+        if (typeof json !== "object") {
+            return null;
         }
+
+        const map: Map<string, any> = new Map();
+
+        const keys: string[] = Object.keys(json);
+
+        for (const key of keys) {
+            if (typeof json[key] === "object") {
+                map.set(key, JSONUtils.retrieveMap(json[key]));
+            } else {
+                map.set(key, json[key]);
+            }
+        }
+
+        return map;
     }
 
 }
